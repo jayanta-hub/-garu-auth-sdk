@@ -1,9 +1,7 @@
-
 {
   "name": "@garu/auth-sdk",
   "version": "1.0.0",
   "description": "Authentication SDK for sharing login state",
-  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -23,7 +21,7 @@
     "singleton",
     "react"
   ],
-  "author": "Jayanta Garu",
+  "author": "Your Team",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
@@ -35,11 +33,6 @@
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.56.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.2",
     "rollup": "^4.48.0",
     "tslib": "^2.8.1",
     "typescript": "^5.9.2"
