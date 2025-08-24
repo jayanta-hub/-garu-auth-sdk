@@ -1,5 +1,5 @@
 {
-  "name": "@jayantagaru/auth-sdk",
+  "name": "auth-sdk",
   "version": "1.0.0",
   "description": "Authentication SDK for sharing login state",
   "main": "dist/index.js",
