@@ -1,11 +1,11 @@
-# @garu/auth-sdk
+# auth-sdk-random-12345
 
 Authentication SDK for sharing login state with functional React components and hooks
 
 ## Installation
 
 ```bash
-npm install @garu/auth-sdk
+npm install auth-sdk-random-12345
 ```
 
 ## Development
@@ -43,7 +43,7 @@ The build process generates:
 
 ```typescript
 import React from 'react';
-import { useAuth, AuthProvider, withAuth } from '@garu/auth-sdk';
+import { useAuth, AuthProvider, withAuth } from 'auth-sdk-random-12345';
 
 // Use the hook in your components
 const MyComponent = () => {
@@ -85,7 +85,7 @@ const ProtectedPage = withAuth(() => <div>Protected Content</div>);
 ### Class-based Usage (Legacy)
 
 ```typescript
-import { authManager } from '@garu/auth-sdk';
+import { authManager } from 'auth-sdk-random-12345';
 
 // Direct usage
 authManager.login(user, token);
