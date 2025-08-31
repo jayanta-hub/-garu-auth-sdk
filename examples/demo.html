@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-App Auth Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .demo-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .demo-card h3 {
+            margin-top: 0;
+            color: #fff;
+            font-size: 1.5em;
+        }
+        .demo-card p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+        .demo-card button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .demo-card button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        .demo-card button.secondary {
+            background: #2196F3;
+        }
+        .demo-card button.secondary:hover {
+            background: #1976D2;
+        }
+        .demo-card button.danger {
+            background: #f44336;
+        }
+        .demo-card button.danger:hover {
+            background: #da190b;
+        }
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        .auth-info {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid #4CAF50;
+        }
+        .auth-info h2 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        .features {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        .features h3 {
+            margin-top: 0;
+            color: #fff;
+        }
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+        .features li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+        .features li:before {
+            content: "✅";
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        .features li:last-child {
+            border-bottom: none;
+        }
+        .instructions {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 2px solid #2196F3;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        .instructions ol {
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Cross-App Authentication Demo</h1>
+            <p>Experience seamless authentication sharing across multiple applications</p>
+        </div>
+
+        <div id="authStatus" class="auth-info" style="display: none;">
+            <h2>✅ Authenticated</h2>
+            <p><strong>User:</strong> <span id="userName"></span></p>
+            <p><strong>Email:</strong> <span id="userEmail"></span></p>
+            <p><strong>Role:</strong> <span id="userRole"></span></p>
+            <p><strong>Token:</strong> <span id="userToken"></span></p>
+        </div>
+
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3>🚀 App 1 - Login</h3>
+                <p>Start here to authenticate and share your login with other applications.</p>
+                <button onclick="openApp1()">Open Login App</button>
+                <button onclick="simulateLogin()" class="secondary">Simulate Login</button>
+                <button onclick="logout()" class="danger">Logout</button>
+            </div>
+
+            <div class="demo-card">
+                <h3>📊 App 2 - Dashboard</h3>
+                <p>This app will automatically receive authentication from App 1 via shared cookies.</p>
+                <button onclick="openApp2()">Open Dashboard</button>
+                <button onclick="checkAuthStatus()" class="secondary">Check Auth Status</button>
+            </div>
+
+            <div class="demo-card">
+                <h3>🔗 URL-Based Sharing</h3>
+                <p>Generate authentication URLs to share login with external applications.</p>
+                <button onclick="generateAuthUrl()">Generate Auth URL</button>
+                <button onclick="testUrlAuth()" class="secondary">Test URL Auth</button>
+                <div id="authUrl" class="status" style="display: none;"></div>
+            </div>
+
+            <div class="demo-card">
+                <h3>📡 Cross-Origin Sharing</h3>
+                <p>Share authentication between different origins using postMessage API.</p>
+                <button onclick="shareCrossOrigin()">Share via postMessage</button>
+                <button onclick="listenForAuth()" class="secondary">Listen for Auth</button>
+                <div id="crossOriginStatus" class="status">Ready to receive auth</div>
+            </div>
+        </div>
+
+        <div class="features">
+            <h3>✨ Key Features</h3>
+            <ul>
+                <li><strong>Automatic Cookie Sharing:</strong> Same-domain apps share auth seamlessly</li>
+                <li><strong>URL-Based Sharing:</strong> Share auth via URLs for cross-domain apps</li>
+                <li><strong>Cross-Origin Communication:</strong> Real-time auth sharing via postMessage</li>
+                <li><strong>Token Expiry Management:</strong> Automatic validation and cleanup</li>
+                <li><strong>Multi-Tab Sync:</strong> Keep authentication in sync across tabs</li>
+                <li><strong>React Integration:</strong> Built-in hooks and context providers</li>
+                <li><strong>Security Features:</strong> Secure cookies, same-site policies, origin validation</li>
+            </ul>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 How to Test</h3>
+            <ol>
+                <li><strong>Start with App 1:</strong> Click "Open Login App" and login with any credentials</li>
+                <li><strong>Open App 2:</strong> Click "Open Dashboard" - it should automatically show you as authenticated</li>
+                <li><strong>Test URL Sharing:</strong> Generate an auth URL and copy it to test cross-domain sharing</li>
+                <li><strong>Test Cross-Origin:</strong> Open multiple tabs to test real-time auth sharing</li>
+                <li><strong>Verify Sync:</strong> Logout from any app and see all apps update simultaneously</li>
+            </ol>
+        </div>
+    </div>
+
+    <script type="module">
+        import { authManager } from '../dist/index.js';
+
+        // Check initial auth status
+        checkAuthStatus();
+
+        // Subscribe to auth changes
+        authManager.subscribe((user) => {
+            if (user) {
+                showAuthenticatedState(user);
+            } else {
+                showUnauthenticatedState();
+            }
+        });
+
+        // Setup external auth listener
+        authManager.constructor.listenForExternalChanges();
+
+        // Process auth from URL if present
+        if (authManager.processAuthFromUrl()) {
+            console.log('Authentication received from URL parameters');
+        }
+
+        function checkAuthStatus() {
+            if (authManager.isLoggedIn()) {
+                const user = authManager.getUser();
+                if (user) {
+                    showAuthenticatedState(user);
+                }
+            } else {
+                showUnauthenticatedState();
+            }
+        }
+
+        function showAuthenticatedState(user) {
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userRole').textContent = user.role || 'N/A';
+            
+            const token = authManager.getToken();
+            document.getElementById('userToken').textContent = token ? token.substring(0, 30) + '...' : 'N/A';
+            
+            document.getElementById('authStatus').style.display = 'block';
+        }
+
+        function showUnauthenticatedState() {
+            document.getElementById('authStatus').style.display = 'none';
+        }
+
+        window.openApp1 = function() {
+            window.open('./app1-login.html', '_blank');
+        };
+
+        window.openApp2 = function() {
+            window.open('./app2-dashboard.html', '_blank');
+        };
+
+        window.simulateLogin = function() {
+            const user = {
+                id: '1',
+                name: 'Demo User',
+                email: 'demo@example.com',
+                role: 'admin'
+            };
+            
+            const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwiaWF0IjoxNjE2MjM5MDIyfQ.demo-token';
+            
+            authManager.login(user, token);
+        };
+
+        window.logout = function() {
+            authManager.logout();
+        };
+
+        window.checkAuthStatus = function() {
+            checkAuthStatus();
+            alert('Auth status checked! Check the status display above.');
+        };
+
+        window.generateAuthUrl = function() {
+            if (!authManager.isLoggedIn()) {
+                alert('Please login first!');
+                return;
+            }
+            
+            try {
+                const authUrl = authManager.generateAuthUrl('https://external-app.example.com/dashboard');
+                document.getElementById('authUrl').textContent = authUrl;
+                document.getElementById('authUrl').style.display = 'block';
+            } catch (error) {
+                alert('Error generating auth URL: ' + error.message);
+            }
+        };
+
+        window.testUrlAuth = function() {
+            // Simulate receiving auth from URL
+            const testUrl = 'https://demo.example.com?auth_token=test-token&auth_user={"id":"2","name":"URL User","email":"url@example.com"}&auth_timestamp=' + Date.now();
+            
+            // Create a temporary iframe to test URL processing
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = testUrl;
+            document.body.appendChild(iframe);
+            
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                alert('URL auth test completed!');
+            }, 1000);
+        };
+
+        window.shareCrossOrigin = function() {
+            if (!authManager.isLoggedIn()) {
+                alert('Please login first!');
+                return;
+            }
+            
+            try {
+                // This would work if you have another app open in another tab
+                // For demo purposes, we'll show a message
+                alert('Cross-origin sharing enabled. Open another tab with an app to test.');
+            } catch (error) {
+                alert('Error sharing auth: ' + error.message);
+            }
+        };
+
+        window.listenForAuth = function() {
+            document.getElementById('crossOriginStatus').textContent = 'Listening for auth messages...';
+            
+            // Listen for cross-origin auth sharing
+            window.addEventListener('message', (event) => {
+                if (event.data.type === 'AUTH_SHARE') {
+                    console.log('Received auth via postMessage:', event.data.auth);
+                    document.getElementById('crossOriginStatus').textContent = '✅ Auth received via postMessage';
+                    
+                    // Auto-login if the auth is valid
+                    const { token, user, timestamp } = event.data.auth;
+                    if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
+                        authManager.login(user, token);
+                    }
+                }
+            });
+        };
+
+        // Auto-check auth status every few seconds
+        setInterval(checkAuthStatus, 3000);
+    </script>
+</body>
+</html>

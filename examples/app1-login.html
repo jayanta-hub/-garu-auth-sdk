@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App 1 - Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .share-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .share-url {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 App 1 - Login</h1>
+        
+        <div id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="Enter your email" value="user@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter your password" value="password123">
+            </div>
+            <button onclick="login()">Login</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+
+        <div id="userInfo" style="display: none;">
+            <h2>Welcome, <span id="userName"></span>!</h2>
+            <p>Email: <span id="userEmail"></span></p>
+            <p>Role: <span id="userRole"></span></p>
+            <button onclick="logout()">Logout</button>
+        </div>
+
+        <div class="share-section">
+            <h3>🔗 Share Authentication</h3>
+            <p>Share your login with other applications:</p>
+            
+            <div>
+                <label>App 2 (Same Domain):</label>
+                <button onclick="shareWithApp2()">Open App 2</button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <label>App 3 (Different Domain):</label>
+                <button onclick="shareWithApp3()">Generate Auth URL</button>
+                <div id="authUrl" class="share-url" style="display: none;"></div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <label>Cross-Origin Sharing:</label>
+                <button onclick="shareCrossOrigin()">Share via postMessage</button>
+            </div>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        import { authManager } from '../dist/index.js';
+
+        // Check if user is already logged in
+        if (authManager.isLoggedIn()) {
+            showUserInfo();
+        }
+
+        // Subscribe to auth changes
+        authManager.subscribe((user) => {
+            if (user) {
+                showUserInfo();
+            } else {
+                showLoginForm();
+            }
+        });
+
+        // Setup external auth listener
+        authManager.constructor.listenForExternalChanges();
+
+        // Process auth from URL if present
+        if (authManager.processAuthFromUrl()) {
+            showStatus('Authentication received from URL!', 'success');
+        }
+
+        window.login = function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showStatus('Please enter email and password', 'error');
+                return;
+            }
+
+            // Simulate API call
+            setTimeout(() => {
+                const user = {
+                    id: '1',
+                    name: 'John Doe',
+                    email: email,
+                    role: 'admin'
+                };
+                
+                const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwiaWF0IjoxNjE2MjM5MDIyfQ.example';
+                
+                authManager.login(user, token);
+                showStatus('Login successful!', 'success');
+            }, 1000);
+        };
+
+        window.logout = function() {
+            authManager.logout();
+            showStatus('Logged out successfully', 'info');
+        };
+
+        window.shareWithApp2 = function() {
+            if (!authManager.isLoggedIn()) {
+                showStatus('Please login first', 'error');
+                return;
+            }
+            
+            // Open App 2 in new tab - it will automatically get the auth via cookies
+            window.open('./app2-dashboard.html', '_blank');
+        };
+
+        window.shareWithApp3 = function() {
+            if (!authManager.isLoggedIn()) {
+                showStatus('Please login first', 'error');
+                return;
+            }
+            
+            try {
+                const authUrl = authManager.generateAuthUrl('https://app3.example.com/dashboard');
+                document.getElementById('authUrl').textContent = authUrl;
+                document.getElementById('authUrl').style.display = 'block';
+                showStatus('Auth URL generated! Copy and share with App 3', 'success');
+            } catch (error) {
+                showStatus('Error generating auth URL: ' + error.message, 'error');
+            }
+        };
+
+        window.shareCrossOrigin = function() {
+            if (!authManager.isLoggedIn()) {
+                showStatus('Please login first', 'error');
+                return;
+            }
+            
+            try {
+                // This would work if you have another app open in another tab
+                // For demo purposes, we'll show a message
+                showStatus('Cross-origin sharing enabled. Open another app to test.', 'info');
+            } catch (error) {
+                showStatus('Error sharing auth: ' + error.message, 'error');
+            }
+        };
+
+        function showUserInfo() {
+            const user = authManager.getUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userRole').textContent = user.role || 'N/A';
+                
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'block';
+            }
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            // Set color based on type
+            statusDiv.style.background = type === 'success' ? 'rgba(76, 175, 80, 0.3)' :
+                                       type === 'error' ? 'rgba(244, 67, 54, 0.3)' :
+                                       'rgba(33, 150, 243, 0.3)';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

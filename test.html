@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth SDK Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Auth SDK Test Page</h1>
+        
+        <div class="test-section">
+            <h3>Basic Authentication Test</h3>
+            <button onclick="testLogin()">Test Login</button>
+            <button onclick="testLogout()">Test Logout</button>
+            <button onclick="checkStatus()">Check Status</button>
+            <div id="basicStatus" class="status info">Ready to test</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Cross-Application Sharing Test</h3>
+            <button onclick="testUrlSharing()">Test URL Sharing</button>
+            <button onclick="testCookieSharing()">Test Cookie Sharing</button>
+            <div id="sharingStatus" class="status info">Ready to test sharing</div>
+        </div>
+
+        <div class="test-section">
+            <h3>Current State</h3>
+            <div id="currentState" class="status info">No user logged in</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { authManager } from './dist/index.js';
+
+        // Update current state display
+        function updateStateDisplay() {
+            const stateDiv = document.getElementById('currentState');
+            if (authManager.isLoggedIn()) {
+                const user = authManager.getUser();
+                const token = authManager.getToken();
+                stateDiv.className = 'status success';
+                stateDiv.innerHTML = `
+                    <strong>✅ Logged In</strong><br>
+                    User: ${user.name} (${user.email})<br>
+                    Role: ${user.role || 'N/A'}<br>
+                    Token: ${token ? token.substring(0, 30) + '...' : 'N/A'}
+                `;
+            } else {
+                stateDiv.className = 'status error';
+                stateDiv.innerHTML = '<strong>❌ Not Logged In</strong>';
+            }
+        }
+
+        // Subscribe to auth changes
+        authManager.subscribe((user) => {
+            updateStateDisplay();
+        });
+
+        // Initial state update
+        updateStateDisplay();
+
+        // Test functions
+        window.testLogin = function() {
+            const user = {
+                id: 'test-1',
+                name: 'Test User',
+                email: 'test@example.com',
+                role: 'tester'
+            };
+            
+            const token = 'test-token-' + Date.now();
+            
+            try {
+                authManager.login(user, token);
+                document.getElementById('basicStatus').className = 'status success';
+                document.getElementById('basicStatus').textContent = '✅ Login successful!';
+            } catch (error) {
+                document.getElementById('basicStatus').className = 'status error';
+                document.getElementById('basicStatus').textContent = '❌ Login failed: ' + error.message;
+            }
+        };
+
+        window.testLogout = function() {
+            try {
+                authManager.logout();
+                document.getElementById('basicStatus').className = 'status info';
+                document.getElementById('basicStatus').textContent = 'ℹ️ Logout successful!';
+            } catch (error) {
+                document.getElementById('basicStatus').className = 'status error';
+                document.getElementById('basicStatus').textContent = '❌ Logout failed: ' + error.message;
+            }
+        };
+
+        window.checkStatus = function() {
+            const isLoggedIn = authManager.isLoggedIn();
+            const user = authManager.getUser();
+            const token = authManager.getToken();
+            
+            document.getElementById('basicStatus').className = 'status info';
+            document.getElementById('basicStatus').innerHTML = `
+                <strong>Status Check:</strong><br>
+                Is Logged In: ${isLoggedIn}<br>
+                User: ${user ? user.name : 'None'}<br>
+                Token: ${token ? 'Present' : 'None'}
+            `;
+        };
+
+        window.testUrlSharing = function() {
+            if (!authManager.isLoggedIn()) {
+                document.getElementById('sharingStatus').className = 'status error';
+                document.getElementById('sharingStatus').textContent = '❌ Please login first to test URL sharing';
+                return;
+            }
+            
+            try {
+                const authUrl = authManager.generateAuthUrl('https://app2.example.com/dashboard');
+                document.getElementById('sharingStatus').className = 'status success';
+                document.getElementById('sharingStatus').innerHTML = `
+                    <strong>✅ URL Sharing Test Successful!</strong><br>
+                    Generated URL: ${authUrl}
+                `;
+            } catch (error) {
+                document.getElementById('sharingStatus').className = 'status error';
+                document.getElementById('sharingStatus').textContent = '❌ URL sharing failed: ' + error.message;
+            }
+        };
+
+        window.testCookieSharing = function() {
+            // Check if cookies are set
+            const cookies = document.cookie;
+            const hasAuthCookie = cookies.includes('auth_token');
+            const hasUserCookie = cookies.includes('auth_user');
+            
+            document.getElementById('sharingStatus').className = 'status info';
+            document.getElementById('sharingStatus').innerHTML = `
+                <strong>🍪 Cookie Sharing Test:</strong><br>
+                Auth Token Cookie: ${hasAuthCookie ? '✅ Present' : '❌ Missing'}<br>
+                User Cookie: ${hasUserCookie ? '✅ Present' : '❌ Missing'}<br>
+                All Cookies: ${cookies || 'None'}
+            `;
+        };
+
+        // Setup external auth listener
+        authManager.constructor.listenForExternalChanges();
+
+        // Process auth from URL if present
+        if (authManager.processAuthFromUrl()) {
+            document.getElementById('basicStatus').className = 'status success';
+            document.getElementById('basicStatus').textContent = '✅ Authentication received from URL!';
+        }
+    </script>
+</body>
+</html>
